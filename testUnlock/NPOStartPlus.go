@@ -2,14 +2,17 @@ package testUnlock
 
 import (
 	"encoding/json"
+	"github.com/DnsUnlock/UnlockTest/lib/result"
+	"github.com/DnsUnlock/UnlockTest/lib/status"
+	"github.com/DnsUnlock/UnlockTest/lib/url"
 	"io"
 	"net/http"
 )
 
 func NPOStartPlus(c http.Client) result.Result {
-	resp, err := GET(c, "https://npo.nl/start/api/domain/player-token?productId=LI_NL1_4188102",
-		H{"connection", "keep-alive"},
-		H{"referer", "https://npo.nl/start/live?channel=NPO1"},
+	resp, err := url.GET(c, "https://npo.nl/start/api/domain/player-token?productId=LI_NL1_4188102",
+		url.H{"connection", "keep-alive"},
+		url.H{"referer", "https://npo.nl/start/live?channel=NPO1"},
 	)
 	if err != nil {
 		return result.Result{Status: status.NetworkErr, Err: err}
@@ -26,10 +29,10 @@ func NPOStartPlus(c http.Client) result.Result {
 		return result.Result{Status: status.Err, Err: err}
 	}
 
-	resp2, err := PostJson(c, "https://prod.npoplayer.nl/stream-link", `{"profileName":"dash","drmType":"playready","referrerUrl":"https://npo.nl/start/live?channel=NPO1"}`,
-		H{"authorization", res.Token},
-		H{"referer", "https://npo.nl/"},
-		H{"origin", "https://npo.nl"},
+	resp2, err := url.PostJson(c, "https://prod.npoplayer.nl/stream-link", `{"profileName":"dash","drmType":"playready","referrerUrl":"https://npo.nl/start/live?channel=NPO1"}`,
+		url.H{"authorization", res.Token},
+		url.H{"referer", "https://npo.nl/"},
+		url.H{"origin", "https://npo.nl"},
 	)
 	if err != nil {
 		return result.Result{Status: status.NetworkErr, Err: err}
