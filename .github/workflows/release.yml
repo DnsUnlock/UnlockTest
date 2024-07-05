@@ -36,7 +36,7 @@ jobs:
       - name: Copy file
         id: copy-file
         run: |
-          docker cp temp-container:/app/unlock_test.so ./UnlockTest-${{ matrix.platform }}-${{ matrix.arch }}.so
+          docker cp temp-container:/app/unlock_test.so ./UnlockTest-${{ matrix.arch }}.so
 
 
       - name: Upload binaries to release
