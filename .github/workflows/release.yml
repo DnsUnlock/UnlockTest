@@ -1,0 +1,51 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - platform: linux
+            arch: '386'
+          - platform: linux
+            arch: 'amd64'
+          - platform: linux
+            arch: 'arm'
+          - platform: linux
+            arch: 'arm64'
+    steps:
+      - uses: actions/checkout@v2
+      - name: Docker Pull
+        id: docker-pull
+        run: |
+          docker pull dnsunlockcom/build-go-1.22.5
+      - name: Build
+        id: build
+        run: |
+          docker build -t my-golang-app .
+
+      - name: Docker Run
+        id: run
+        run: |
+          docker run --name temp-container my-golang-app 
+
+      - name: Copy file
+        id: copy-file
+        run: |
+          docker cp temp-container:/app/unlock_test.so ./UnlockTest-${{ matrix.platform }}-${{ matrix.arch }}.so
+
+
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        if: github.event_name == 'release'
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./UnlockTest-${{ matrix.platform }}-${{ matrix.arch }}.so*
+          tag: ${{ github.ref }}
+          file_glob: true
