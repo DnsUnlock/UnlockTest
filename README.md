@@ -46,14 +46,14 @@ func main() {
 
 	// 调用插件中的函数
 	result := pluginInstance.Call("YouTubeCDN")
-    //响应的字符串为json结构为
-    /*
-    type Result struct {
-	Status int
-	Region string
-	Info   string
-	Err    error
-	}*/
+    	//响应的字符串为json结构为
+    	/*
+   	 type Result struct {
+		Status int
+		Region string
+		Info   string
+		Err    error
+		}*/
 	fmt.Println("Result from plugin:", result)
 
 }
