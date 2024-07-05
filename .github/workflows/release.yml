@@ -44,6 +44,6 @@ jobs:
         if: github.event_name == 'release'
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./UnlockTest-${{ matrix.platform }}-${{ matrix.arch }}.so
+          file: ./UnlockTest-${{ matrix.arch }}.so
           tag: ${{ github.ref }}
           file_glob: true
