@@ -25,8 +25,8 @@ type PluginEntranceModel struct {
 }
 
 func main() {
-	//加载插件 ./plugins/hello-world/pubgin-hello-world.so
-	open, err := plugin.Open("/home/code/GoProjects/DnsUnlock/UnlockTest/unlock_test.so")
+	//加载插件
+	open, err := plugin.Open("/DnsUnlock/UnlockTest/unlock_test.so")
 	if err != nil {
 		fmt.Println(err)
 		return
