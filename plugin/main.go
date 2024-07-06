@@ -1,16 +1,28 @@
 package main
 
 import (
+	"context"
+	"flag"
 	"github.com/DnsUnlock/UnlockTest/lib/client"
+	"github.com/DnsUnlock/UnlockTest/lib/dialer"
+	"github.com/DnsUnlock/UnlockTest/lib/proxy"
 	results "github.com/DnsUnlock/UnlockTest/lib/result"
+	"github.com/DnsUnlock/UnlockTest/lib/transport"
 	"github.com/DnsUnlock/UnlockTest/testUnlock"
+	"golang.org/x/sys/unix"
+	"log"
+	"net"
+	"net/http"
+	"net/url"
+	"runtime"
 	"sync"
+	"syscall"
 )
 
 type PluginInterface interface {
-	Registers() string           // 用于存储插件系统的注册函数名
-	Func() map[string]string     // 用于存储函数名
-	Call(Function string) string // 用于调用函数
+	Registers() string                               // 用于存储插件系统的注册函数名
+	Func() map[string]string                         // 用于存储函数名
+	Call(Function string, args []interface{}) string // 用于调用函数
 }
 
 var PluginEntrance PluginEntranceModel
@@ -173,8 +185,9 @@ func (p *PluginEntranceModel) Func() map[string]string {
 }
 
 // Call 调用函数
-func (p *PluginEntranceModel) Call(Function string) string {
-	c := client.Auto
+func (p *PluginEntranceModel) Call(Function string, args []interface{}) string {
+	o := Flag(args)
+	c := o.Client()
 	switch Function {
 	case "AcornTV":
 		return TS(testUnlock.AcornTV(c))
@@ -480,4 +493,110 @@ type result struct {
 
 func TS(result results.Result) string {
 	return result.ToString()
+}
+
+type Options struct {
+	Mode       int
+	Interface  string
+	DnsServers string
+	HttpProxy  string
+}
+
+func (o *Options) Client() http.Client {
+	if o.Interface != "" {
+		if IP := net.ParseIP(o.Interface); IP != nil {
+			dialer.Dialer.LocalAddr = &net.TCPAddr{IP: IP}
+		} else {
+			dialer.Dialer.Control = func(network, address string, c syscall.RawConn) error {
+				return SetSocketOptions(network, address, c, o.Interface)
+			}
+		}
+	}
+	if o.DnsServers != "" {
+		dialer.Dialer.Resolver = &net.Resolver{
+			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+				return (&net.Dialer{}).DialContext(ctx, "udp", o.DnsServers)
+			},
+		}
+	}
+	if o.HttpProxy != "" {
+		log.Println(o.HttpProxy)
+		if u, err := url.Parse(o.HttpProxy); err == nil {
+			proxy.Client = http.ProxyURL(u)
+			transport.Ipv4.Proxy = proxy.Client
+			client.Ipv4.Transport = transport.Ipv4
+			transport.Ipv6.Proxy = proxy.Client
+			client.Ipv6.Transport = transport.Ipv6
+			transport.Auto.Proxy = proxy.Client
+			client.Auto.Transport = transport.Auto
+		}
+	}
+	switch o.Mode {
+	case 4:
+		return client.Ipv4
+	case 6:
+		return client.Ipv6
+	default:
+		return client.Auto
+	}
+}
+
+func Flag(args []interface{}) Options {
+	mode := 0
+	Iface := ""
+	DnsServers := ""
+	httpProxy := ""
+	// Initialize the flags with default values
+	flagSet := flag.NewFlagSet("test", flag.ContinueOnError)
+	flagSet.IntVar(&mode, "m", 0, "mode 0(default)/4/6")
+	flagSet.StringVar(&Iface, "I", "", "source ip / interface")
+	flagSet.StringVar(&DnsServers, "dns-servers", "", "specify dns servers")
+	flagSet.StringVar(&httpProxy, "http-proxy", "", "http proxy")
+
+	// Parse the provided arguments
+	var newArgs []string
+	for _, arg := range args {
+		newArgs = append(newArgs, arg.(string))
+	}
+	flagSet.Parse(newArgs)
+
+	// Return the parsed values in a formatted string
+	var options = Options{
+		Mode:       mode,
+		Interface:  Iface,
+		DnsServers: DnsServers,
+		HttpProxy:  httpProxy,
+	}
+	return options
+}
+
+var SetSocketOptions = func(network, address string, c syscall.RawConn, interfaceName string) (err error) {
+	return
+}
+
+func init() {
+	SetSocketOptions = func(network, address string, c syscall.RawConn, interfaceName string) (err error) {
+		switch network {
+		case "tcp", "tcp4", "tcp6":
+		case "udp", "udp4", "udp6":
+		default:
+			return
+		}
+		var innerErr error
+		if runtime.GOOS == "linux" {
+			err = c.Control(func(fd uintptr) {
+				host, _, _ := net.SplitHostPort(address)
+				if ip := net.ParseIP(host); ip != nil && !ip.IsGlobalUnicast() {
+					return
+				}
+				if innerErr = unix.BindToDevice(int(fd), interfaceName); innerErr != nil {
+					return
+				}
+			})
+		}
+		if innerErr != nil {
+			err = innerErr
+		}
+		return
+	}
 }

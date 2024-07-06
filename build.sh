@@ -12,3 +12,5 @@ echo "删除 Docker 容器"
 docker rm temp-container
 echo "删除 Docker 镜像"
 docker rmi my-golang-app
+
+chmod +x ./unlock_test.so
