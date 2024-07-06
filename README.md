@@ -12,18 +12,21 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"plugin"
 )
 
 type PluginInterface interface {
-	Registers() string           // 用于存储插件系统的注册函数名
-	Func() map[string]string     // 用于存储函数名 name -> function
-	Call(Function string) string // 用于调用函数
+	Registers() string                               // 用于存储插件系统的注册函数名
+	Func() map[string]string                         // 用于存储函数名
+	Call(Function string, args []interface{}) string // 用于调用函数
+}
+type PluginEntranceModel struct {
 }
 
 func main() {
 	//加载插件 ./plugins/hello-world/pubgin-hello-world.so
-	open, err := plugin.Open("./plugin/unlock_test.so")
+	open, err := plugin.Open("/home/code/GoProjects/DnsUnlock/UnlockTest/unlock_test.so")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -43,18 +46,28 @@ func main() {
 	}
 
 	// 调用插件中的函数
-	result := pluginInstance.Call("YouTubeCDN")
-    	//响应的字符串为json结构为
-    	/*
-   	 type Result struct {
-		Status int
-		Region string
-		Info   string
-		Err    error
-		}*/
-	fmt.Println("Result from plugin:", result)
+	for k, _ := range pluginInstance.Func() {
+		var args []interface{}
+		for i, v := range os.Args {
+			if i == 0 {
+				continue
+			}
+			args = append(args, v)
+		}
+		result := pluginInstance.Call(k, args)
+		/*
+			type Result struct {
+				Status int
+				Region string
+				Info   string
+				Err    error
+			}
+		*/
+		fmt.Println(k, ":", result)
+	}
 
 }
+
 
 ``````
 
