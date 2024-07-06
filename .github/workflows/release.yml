@@ -54,6 +54,14 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: |
             ./UnlockTest-${{ matrix.arch }}.so
+          tag: ${{ github.ref }}
+          file_glob: true
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        if: github.event_name == 'release'
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: |
             ./UnlockTest-${{ matrix.arch }}.so.md5sum
           tag: ${{ github.ref }}
           file_glob: true
