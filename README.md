@@ -1,9 +1,7 @@
 # UnlockTest
 解锁测试插件
 
-流媒体解锁检测代码使用的是并且进行了修改 
-
-- [MediaUnlockTest](https://github.com/HsukqiLee/MediaUnlockTest)
+我们使用了 [MediaUnlockTest](https://github.com/HsukqiLee/MediaUnlockTest)进行流媒体解锁检测，并对其进行了必要的修改和优化，以更好地满足我们的需求。
 
 如何在代码中调用插件
 
