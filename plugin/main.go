@@ -500,6 +500,7 @@ type Options struct {
 	Interface  string
 	DnsServers string
 	HttpProxy  string
+	ClientIP   string
 }
 
 func (o *Options) Client() http.Client {
@@ -510,6 +511,25 @@ func (o *Options) Client() http.Client {
 			dialer.Dialer.Control = func(network, address string, c syscall.RawConn) error {
 				return SetSocketOptions(network, address, c, o.Interface)
 			}
+		}
+	}
+	if o.ClientIP != "" {
+		//需要判断这里的IP为IPv4/IPv6 以及是否包含端口号
+		host, port, err := net.SplitHostPort(o.ClientIP)
+		if err != nil {
+			// 如果没有端口号，可能会报错，所以直接将 IP 当作 host
+			host = o.ClientIP
+			port = "443"
+		}
+		// 判断是否为有效的 IPv4/IPv6
+		parsedIP := net.ParseIP(host)
+		if parsedIP != nil {
+			dialContext := func(ctx context.Context, network, address string) (net.Conn, error) {
+				return dialer.Dialer.DialContext(ctx, network, net.JoinHostPort(host, port))
+			}
+			transport.Auto.DialContext = dialContext
+			transport.Ipv4.DialContext = dialContext
+			transport.Ipv6.DialContext = dialContext
 		}
 	}
 	if o.DnsServers != "" {
@@ -546,13 +566,14 @@ func Flag(args []interface{}) Options {
 	Iface := ""
 	DnsServers := ""
 	httpProxy := ""
+	clientIP := ""
 	// Initialize the flags with default values
 	flagSet := flag.NewFlagSet("test", flag.ContinueOnError)
 	flagSet.IntVar(&mode, "m", 0, "mode 0(default)/4/6")
 	flagSet.StringVar(&Iface, "I", "", "source ip / interface")
 	flagSet.StringVar(&DnsServers, "dns-servers", "", "specify dns servers")
 	flagSet.StringVar(&httpProxy, "http-proxy", "", "http proxy")
-
+	flagSet.StringVar(&clientIP, "client-ip", "", "client ip")
 	// Parse the provided arguments
 	var newArgs []string
 	for _, arg := range args {
@@ -566,6 +587,7 @@ func Flag(args []interface{}) Options {
 		Interface:  Iface,
 		DnsServers: DnsServers,
 		HttpProxy:  httpProxy,
+		ClintIP:    clientIP,
 	}
 	return options
 }
