@@ -3,13 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/DnsUnlock/UnlockTest/lib/client"
-	"github.com/DnsUnlock/UnlockTest/lib/dialer"
-	"github.com/DnsUnlock/UnlockTest/lib/proxy"
-	results "github.com/DnsUnlock/UnlockTest/lib/result"
-	"github.com/DnsUnlock/UnlockTest/lib/transport"
-	"github.com/DnsUnlock/UnlockTest/testUnlock"
-	"golang.org/x/sys/unix"
 	"log"
 	"net"
 	"net/http"
@@ -17,6 +10,14 @@ import (
 	"runtime"
 	"sync"
 	"syscall"
+
+	"github.com/DnsUnlock/UnlockTest/lib/client"
+	"github.com/DnsUnlock/UnlockTest/lib/dialer"
+	"github.com/DnsUnlock/UnlockTest/lib/proxy"
+	results "github.com/DnsUnlock/UnlockTest/lib/result"
+	"github.com/DnsUnlock/UnlockTest/lib/transport"
+	"github.com/DnsUnlock/UnlockTest/testUnlock"
+	"golang.org/x/sys/unix"
 )
 
 type PluginInterface interface {
@@ -587,7 +588,7 @@ func Flag(args []interface{}) Options {
 		Interface:  Iface,
 		DnsServers: DnsServers,
 		HttpProxy:  httpProxy,
-		ClintIP:    clientIP,
+		ClientIP:   clientIP,
 	}
 	return options
 }
