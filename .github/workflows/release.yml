@@ -41,11 +41,13 @@ jobs:
         id: copy-file
         run: |
           docker cp temp-container:/app/unlock_test.so ./UnlockTest-${{ matrix.arch }}.so
+          docker cp temp-container:/app/unlock_test_debug.so ./UnlockTest-${{ matrix.arch }}-Debug.so
 
       - name: Compute hash
         id: compute-hash
         run: |
           md5sum ./UnlockTest-${{ matrix.arch }}.so | cut -d ' ' -f 1 > ./UnlockTest-${{ matrix.arch }}.so.md5sum
+          md5sum ./UnlockTest-${{ matrix.arch }}-Debug.so | cut -d ' ' -f 1 > ./UnlockTest-${{ matrix.arch }}-Debug.so.md5sum
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
@@ -63,5 +65,23 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: |
             ./UnlockTest-${{ matrix.arch }}.so.md5sum
+          tag: ${{ github.ref }}
+          file_glob: true
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        if: github.event_name == 'release'
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: |
+            ./UnlockTest-${{ matrix.arch }}-Debug.so
+          tag: ${{ github.ref }}
+          file_glob: true
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        if: github.event_name == 'release'
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: |
+            ./UnlockTest-${{ matrix.arch }}-Debug.so.md5sum
           tag: ${{ github.ref }}
           file_glob: true
