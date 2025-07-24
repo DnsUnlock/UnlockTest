@@ -1,4 +1,4 @@
-FROM dnsunlockcom/build-go-1.22.5:cn
+FROM golang:1.24.4
 
 WORKDIR /app
 
