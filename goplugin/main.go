@@ -175,7 +175,7 @@ var ToolList = map[string]string{ // name -> function
 func (p *UnlockTestPlugin) GetPluginInfo() (plugin.PluginInfo, error) {
 	return plugin.PluginInfo{
 		Name:        "UnlockTest",
-		Version:     "1.1.2",
+		Version:     "2.0.0",
 		Description: "提供流媒体解锁测试功能的插件",
 		Author:      "DnsUnlock Team",
 	}, nil
