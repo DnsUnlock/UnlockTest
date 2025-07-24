@@ -48,9 +48,7 @@ jobs:
         if: github.event_name == 'release'
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: |
-            goplugin/releases/*/*/UnlockTest.tool.plugin
-            goplugin/releases/*/*/UnlockTest.tool.plugin.exe
+          file: "goplugin/releases/*/*/UnlockTest.tool.plugin*"
           tag: ${{ github.ref }}
           file_glob: true
           
@@ -59,8 +57,6 @@ jobs:
         if: github.event_name == 'release'
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: |
-            goplugin/releases/*/*/UnlockTest.tool.plugin.md5sum
-            goplugin/releases/*/*/UnlockTest.tool.plugin.exe.md5sum
+          file: "goplugin/releases/*/*/*.md5sum"
           tag: ${{ github.ref }}
           file_glob: true
