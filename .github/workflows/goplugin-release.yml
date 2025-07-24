@@ -22,41 +22,41 @@ jobs:
           cd goplugin
           make releases
 
-      - name: Compute hash for all platforms
-        id: compute-hash
+      - name: Compute hash and create packages
+        id: compute-hash-and-package
         run: |
           cd goplugin
-          # 为所有平台和架构生成哈希文件
+          mkdir -p packages
+          # 为所有平台和架构生成哈希文件并打包
           for platform in linux windows darwin; do
             for arch in amd64 arm64; do
               if [ "$platform" = "windows" ]; then
                 if [ -f "releases/$platform/$arch/UnlockTest.tool.plugin.exe" ]; then
                   md5sum "releases/$platform/$arch/UnlockTest.tool.plugin.exe" | cut -d ' ' -f 1 > "releases/$platform/$arch/UnlockTest.tool.plugin.exe.md5sum"
                   echo "Generated hash for $platform-$arch"
+                  # 创建压缩包
+                  cd "releases/$platform/$arch"
+                  zip "../../../packages/UnlockTest-$platform-$arch.zip" UnlockTest.tool.plugin.exe UnlockTest.tool.plugin.exe.md5sum
+                  cd ../../..
                 fi
               else
                 if [ -f "releases/$platform/$arch/UnlockTest.tool.plugin" ]; then
                   md5sum "releases/$platform/$arch/UnlockTest.tool.plugin" | cut -d ' ' -f 1 > "releases/$platform/$arch/UnlockTest.tool.plugin.md5sum"
                   echo "Generated hash for $platform-$arch"
+                  # 创建压缩包
+                  cd "releases/$platform/$arch"
+                  zip "../../../packages/UnlockTest-$platform-$arch.zip" UnlockTest.tool.plugin UnlockTest.tool.plugin.md5sum
+                  cd ../../..
                 fi
               fi
             done
           done
 
-      - name: Upload all plugin binaries to release
+      - name: Upload packaged releases
         uses: svenstaro/upload-release-action@v2
         if: github.event_name == 'release'
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: "goplugin/releases/*/*/UnlockTest.tool.plugin*"
-          tag: ${{ github.ref }}
-          file_glob: true
-          
-      - name: Upload all hash files to release
-        uses: svenstaro/upload-release-action@v2
-        if: github.event_name == 'release'
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: "goplugin/releases/*/*/*.md5sum"
+          file: "goplugin/packages/*.zip"
           tag: ${{ github.ref }}
           file_glob: true
