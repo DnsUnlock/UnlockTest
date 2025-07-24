@@ -1,0 +1,66 @@
+name: GoPlugin Build and Release
+
+on:
+  release:
+    types: [ published ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24'
+
+      - name: Build using Makefile
+        id: build
+        run: |
+          cd UnlockTest/goplugin
+          make releases
+
+      - name: Compute hash for all platforms
+        id: compute-hash
+        run: |
+          cd UnlockTest/goplugin
+          # 为所有平台和架构生成哈希文件
+          for platform in linux windows darwin; do
+            for arch in amd64 arm64; do
+              if [ "$platform" = "windows" ]; then
+                if [ -f "releases/$platform/$arch/UnlockTest.tool.plugin.exe" ]; then
+                  md5sum "releases/$platform/$arch/UnlockTest.tool.plugin.exe" | cut -d ' ' -f 1 > "releases/$platform/$arch/UnlockTest.tool.plugin.exe.md5sum"
+                  echo "Generated hash for $platform-$arch"
+                fi
+              else
+                if [ -f "releases/$platform/$arch/UnlockTest.tool.plugin" ]; then
+                  md5sum "releases/$platform/$arch/UnlockTest.tool.plugin" | cut -d ' ' -f 1 > "releases/$platform/$arch/UnlockTest.tool.plugin.md5sum"
+                  echo "Generated hash for $platform-$arch"
+                fi
+              fi
+            done
+          done
+
+      - name: Upload all plugin binaries to release
+        uses: svenstaro/upload-release-action@v2
+        if: github.event_name == 'release'
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: |
+            UnlockTest/goplugin/releases/*/*/UnlockTest.tool.plugin
+            UnlockTest/goplugin/releases/*/*/UnlockTest.tool.plugin.exe
+          tag: ${{ github.ref }}
+          file_glob: true
+          
+      - name: Upload all hash files to release
+        uses: svenstaro/upload-release-action@v2
+        if: github.event_name == 'release'
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: |
+            UnlockTest/goplugin/releases/*/*/UnlockTest.tool.plugin.md5sum
+            UnlockTest/goplugin/releases/*/*/UnlockTest.tool.plugin.exe.md5sum
+          tag: ${{ github.ref }}
+          file_glob: true
