@@ -19,13 +19,13 @@ jobs:
       - name: Build using Makefile
         id: build
         run: |
-          cd UnlockTest/goplugin
+          cd goplugin
           make releases
 
       - name: Compute hash for all platforms
         id: compute-hash
         run: |
-          cd UnlockTest/goplugin
+          cd goplugin
           # 为所有平台和架构生成哈希文件
           for platform in linux windows darwin; do
             for arch in amd64 arm64; do
@@ -49,8 +49,8 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: |
-            UnlockTest/goplugin/releases/*/*/UnlockTest.tool.plugin
-            UnlockTest/goplugin/releases/*/*/UnlockTest.tool.plugin.exe
+            goplugin/releases/*/*/UnlockTest.tool.plugin
+            goplugin/releases/*/*/UnlockTest.tool.plugin.exe
           tag: ${{ github.ref }}
           file_glob: true
           
@@ -60,7 +60,7 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: |
-            UnlockTest/goplugin/releases/*/*/UnlockTest.tool.plugin.md5sum
-            UnlockTest/goplugin/releases/*/*/UnlockTest.tool.plugin.exe.md5sum
+            goplugin/releases/*/*/UnlockTest.tool.plugin.md5sum
+            goplugin/releases/*/*/UnlockTest.tool.plugin.exe.md5sum
           tag: ${{ github.ref }}
           file_glob: true
